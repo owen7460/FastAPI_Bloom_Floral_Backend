@@ -16,8 +16,8 @@ ASYNC_DATABASE_URL,
 )
 
 class Base(DeclarativeBase):
-    create_time: Mapped[datetime] = mapped_column(DateTime, insert_default=func.now(), default=func.now, comment='create_time')
-    update_time: Mapped[datetime] = mapped_column(DateTime, insert_default=func.now(), default=func.now, onupdate=func.now() ,comment='update_time')
+    create_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), comment='create_time')
+    update_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now() ,comment='update_time')
 
 class Flower(Base):
     pass
