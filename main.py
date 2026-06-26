@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from fastapi import FastAPI
-from sqlalchemy import DateTime, func
+from sqlalchemy import DateTime, func, String
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -20,7 +20,15 @@ class Base(DeclarativeBase):
     update_time: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now() ,comment='update_time')
 
 class Flower(Base):
-    pass
+    __tablename__ = "flowers"
+
+    id:Mapped[int] = mapped_column(primary_key=True, comment="flower ID")
+    name:Mapped[str] = mapped_column(String(255),comment="flower Name")
+    price: Mapped[float] = mapped_column(comment= "flower Price")
+    description: Mapped[str] = mapped_column(default="", comment="flower Description")
+    stock: Mapped[int] = mapped_column(default=0, comment="flower number")
+    image_url:Mapped[str] = mapped_column(String(255),comment="pictures url")
+    is_active:Mapped[bool] = mapped_column(default=True, comment="flower Available")
 
 
 @app.get("/")
