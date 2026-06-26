@@ -1,12 +1,13 @@
+from contextlib import asynccontextmanager
 from datetime import datetime
+from decimal import Decimal
 
 from fastapi import FastAPI
-from sqlalchemy import DateTime, func, String
+from sqlalchemy import DateTime, func, String, Text, Numeric
 from sqlalchemy.ext.asyncio import create_async_engine
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
-app = FastAPI()
-ASYNC_DATABASE_URL = "mysql+aiomysql://root:123456@localhost:3306/FastAPI_Bloom_Floral_Backend?charset=utf8"
+ASYNC_DATABASE_URL = "mysql+aiomysql://root:123456@localhost:3306/fastapi_bloom_floral_backend?charset=utf8mb4"
 
 async_engine = create_async_engine(
 ASYNC_DATABASE_URL,
@@ -24,12 +25,22 @@ class Flower(Base):
 
     id:Mapped[int] = mapped_column(primary_key=True, comment="flower ID")
     name:Mapped[str] = mapped_column(String(255),comment="flower Name")
-    price: Mapped[float] = mapped_column(comment= "flower Price")
-    description: Mapped[str] = mapped_column(default="", comment="flower Description")
+    price: Mapped[Decimal] = mapped_column(Numeric(10,2),comment= "flower Price")
+    description: Mapped[str] = mapped_column(Text, nullable=True, comment="flower Description")
     stock: Mapped[int] = mapped_column(default=0, comment="flower number")
     image_url:Mapped[str] = mapped_column(String(255),comment="pictures url")
     is_active:Mapped[bool] = mapped_column(default=True, comment="flower Available")
 
+async def create_tables():
+    async with async_engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+@asynccontextmanager
+async def lifespan(app:FastAPI):
+    await create_tables()
+    yield
+    await async_engine.dispose()
+app = FastAPI(lifespan=lifespan)
 
 @app.get("/")
 async def root():
