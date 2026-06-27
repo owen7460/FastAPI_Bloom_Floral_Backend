@@ -4,7 +4,7 @@ from decimal import Decimal
 
 from fastapi import FastAPI
 from sqlalchemy import DateTime, func, String, Text, Numeric
-from sqlalchemy.ext.asyncio import create_async_engine
+from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 ASYNC_DATABASE_URL = "mysql+aiomysql://root:123456@localhost:3306/fastapi_bloom_floral_backend?charset=utf8mb4"
@@ -42,11 +42,25 @@ async def lifespan(app:FastAPI):
     await async_engine.dispose()
 app = FastAPI(lifespan=lifespan)
 
+AsyncSessionLocal = async_sessionmaker(
+    bind=async_engine,
+    class_=AsyncSession,
+    expire_on_commit=False,
+)
+
+async def get_database():
+    async with AsyncSessionLocal() as session:
+        try:
+            yield session
+            await session.commit()
+        except Exception:
+            await session.rollback()
+            raise
+        finally:
+            await session.close()
+
+
 @app.get("/")
 async def root():
     return {"message": "Hello, this is backend for florist -- Bloom Floral!"}
 
-
-@app.get("/hello/{name}")
-async def say_hello(name: str):
-    return {"message": f"{name} Hello from Bloom Floral!"}
