@@ -2,8 +2,8 @@ from contextlib import asynccontextmanager
 from datetime import datetime
 from decimal import Decimal
 
-from fastapi import FastAPI
-from sqlalchemy import DateTime, func, String, Text, Numeric
+from fastapi import FastAPI, Depends
+from sqlalchemy import DateTime, func, String, Text, Numeric, select
 from sqlalchemy.ext.asyncio import create_async_engine, async_sessionmaker, AsyncSession
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
@@ -63,4 +63,14 @@ async def get_database():
 @app.get("/")
 async def root():
     return {"message": "Hello, this is backend for florist -- Bloom Floral!"}
+
+@app.get("/flowers")
+async def get_flowers(db:AsyncSession = Depends(get_database)):
+    result = await db.execute(select(Flower))
+    flowers = result.scalars().all()
+    return {
+        "code": 200,
+        "msg": "success",
+        "flowers": flowers
+    }
 
